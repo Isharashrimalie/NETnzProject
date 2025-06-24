@@ -94,25 +94,34 @@ namespace NZWalks.Controllers
             //    RegionImageUrl = addRegionRequestDto.RegionImageUrl
             //};
 
-            var regionDomainModel = mapper.Map<Region>(addRegionRequestDto);
-            //Use Domain Model to create Region 
-            //await dbContext.Regions.AddAsync(regionDomainModel);
-            //await dbContext.SaveChangesAsync();
-            regionDomainModel = await regionRepository.CreateAsync(regionDomainModel);
+            if (ModelState.IsValid)
+            {
+                var regionDomainModel = mapper.Map<Region>(addRegionRequestDto);
+                //Use Domain Model to create Region 
+                //await dbContext.Regions.AddAsync(regionDomainModel);
+                //await dbContext.SaveChangesAsync();
+                regionDomainModel = await regionRepository.CreateAsync(regionDomainModel);
 
-            //Map Domain Model back to DTO
-            //var regionDto = new RegionDto
-            //{
-            //    Id = regionDomainModel.Id,
-            //    Code = regionDomainModel.Code,
-            //    Name = regionDomainModel.Name,
-            //    RegionImageUrl = regionDomainModel.RegionImageUrl
-            //};
+                //Map Domain Model back to DTO
+                //var regionDto = new RegionDto
+                //{
+                //    Id = regionDomainModel.Id,
+                //    Code = regionDomainModel.Code,
+                //    Name = regionDomainModel.Name,
+                //    RegionImageUrl = regionDomainModel.RegionImageUrl
+                //};
 
-            var regionDto = mapper.Map<RegionDto>(regionDomainModel);
+                var regionDto = mapper.Map<RegionDto>(regionDomainModel);
 
-            return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, regionDto);
+                return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, regionDto);
+            }
+            else 
+            {
+                return BadRequest(ModelState);
+            }
         }
+
+
         
         // Update regiom
         [HttpPut]
