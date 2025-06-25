@@ -64,5 +64,9 @@ namespace NZWalks.Repositories
             return existingWalk;
         }
 
+        public Task<List<Walk>> GetAllAsync(string? filterOn = null, string? filterQuery = null)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
