@@ -19,9 +19,43 @@ namespace NZWalks.Repositories
             return walk;
         }
 
-        public async Task<List<Walk>> GetAllAsync()
+        public async Task<List<Walk>> GetAllAsync(string? filterOn = null, string? filterQuery = null,
+            string? sortBy = null, bool InAscending = true)
         {
-            return await dbContext.Walks.Include("Difficulity").Include("Region").ToListAsync();
+            var walks = dbContext.Walks.Include("Difficulity").Include("Region").AsQueryable();
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(filterOn) && !string.IsNullOrWhiteSpace(filterQuery))
+            {
+                if (filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = walks.Where(x => x.Name.Contains(filterQuery));
+                }
+                else if (filterOn.Equals("Description", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = walks.Where(x => x.Description.Contains(filterQuery));
+                }
+                else if (filterOn.Equals("LengthInKm", StringComparison.OrdinalIgnoreCase) && double.TryParse(filterQuery, out var length))
+                {
+                    walks = walks.Where(x => x.LengthInKm == length);
+                }
+            }
+
+            // Sorting
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                if (sortBy.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = InAscending ? walks.OrderBy(x => x.Name) : walks.OrderByDescending(x => x.Name);
+                }
+                else if (sortBy.Equals("LengthInKm", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = InAscending ? walks.OrderBy(x => x.LengthInKm) : walks.OrderByDescending(x => x.LengthInKm);
+                }
+            }
+
+            // Always return the result
+            return await walks.ToListAsync();
         }
 
         public async Task<Walk?> GetByIdAsync(Guid id)
@@ -64,9 +98,23 @@ namespace NZWalks.Repositories
             return existingWalk;
         }
 
-        public Task<List<Walk>> GetAllAsync(string? filterOn = null, string? filterQuery = null)
-        {
-            throw new NotImplementedException();
-        }
+        //public async Task<List<Walk>> GetAllAsync(string? filterOn = null, string? filterQuery = null)
+        //{
+        //    var query = dbContext.Walks
+        //        .Include(w => w.Difficulity)
+        //        .Include(w => w.Region)
+        //        .AsQueryable();
+
+        //    if (!string.IsNullOrWhiteSpace(filterOn) && !string.IsNullOrWhiteSpace(filterQuery))
+        //    {
+        //        if (filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
+        //        {
+        //            query = query.Where(w => w.Name.Contains(filterQuery));
+        //        }
+        //        // Add more filters as needed
+        //    }
+
+        //    return await query.ToListAsync();
+        //}
     }
 }

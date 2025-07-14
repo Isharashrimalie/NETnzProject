@@ -45,14 +45,55 @@ namespace NZWalks.Controllers
         //Get walks
         //GET: /api/walks?filterOn=Name&filterQuery=Track
         [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] string? filterOn, [FromQuery] string? filterQuery,
+            [FromQuery] string? sortBy, [FromQuery] bool? isAscending)
 
-        public async Task<IActionResult> GetAll([FromQuery] string? filterOn, [FromQuery] string? filterQuery)
         {
-            var walksDomainModel = await walkRepository.GetAllAsync();
+            try
+            {
+                var walksDomainModel = await walkRepository.GetAllAsync(filterOn, filterQuery, sortBy, isAscending ?? true);
 
-            //map domain model to dto
-            return Ok(mapper.Map<List<WalkDto>>(walksDomainModel));
+                // Debug: Log the count
+                Console.WriteLine($"Found {walksDomainModel?.Count ?? 0} walks");
+                
+                if (walksDomainModel == null || !walksDomainModel.Any())
+                {
+                    return Ok(new List<WalkDto>());
+                }
 
+                // Temporarily return raw data without mapping
+                var walkDtos = walksDomainModel.Select(w => new WalkDto
+                {
+                    Id = w.Id,
+                    Name = w.Name,
+                    Description = w.Description,
+                    LengthInKm = w.LengthInKm,
+                    WalkImageUrl = w.WalkImageUrl,
+                    Region = w.Region != null ? new RegionDto
+                    {
+                        Id = w.Region.Id,
+                        Code = w.Region.Code,
+                        Name = w.Region.Name,
+                        RegionImageUrl = w.Region.RegionImageUrl
+                    } : null,
+                    Difficulity = w.Difficulity != null ? new DifficulityDto
+                    {
+                        Id = w.Difficulity.Id,
+                        Name = w.Difficulity.Name
+                    } : null
+                }).ToList();
+                
+                // Debug: Log the mapped DTOs
+                Console.WriteLine($"Mapped {walkDtos?.Count ?? 0} walk DTOs");
+                
+                return Ok(walkDtos);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetAll: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                return StatusCode(500, new { error = ex.Message, details = ex.StackTrace });
+            }
         }
 
         //Get walk by id
